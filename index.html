@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whisper Transcription</title>
+</head>
+<body>
+    <h1>Whisper Transcription Web App</h1>
+    
+    <form id="transcription-form">
+        <label for="youtube-url">YouTube Video URL:</label><br>
+        <input type="text" id="youtube-url" name="youtube-url" required><br><br>
+
+        <label for="whisper-api-key">Whisper API Key:</label><br>
+        <input type="text" id="whisper-api-key" name="whisper-api-key" required><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>Transcription Result</h2>
+    <pre id="transcription-result"></pre>
+
+    <a id="download-link" style="display:none;">Download Transcription</a>
+
+    <script>
+        document.getElementById('transcription-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const videoUrl = document.getElementById('youtube-url').value;
+            const apiKey = document.getElementById('whisper-api-key').value;
+
+            // Display progress
+            document.getElementById('transcription-result').innerText = "Processing...";
+
+            try {
+                // Make request to backend
+                const response = await fetch('/transcribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ youtubeUrl: videoUrl, apiKey: apiKey })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    document.getElementById('transcription-result').innerText = data.error;
+                    return;
+                }
+
+                // Show transcription result
+                document.getElementById('transcription-result').innerText = data.transcription;
+
+                // Create download link for the transcription file
+                const blob = new Blob([data.transcription], { type: 'text/plain' });
+                const link = document.getElementById('download-link');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'transcription.txt';
+                link.style.display = 'block';
+            } catch (error) {
+                document.getElementById('transcription-result').innerText = "An error occurred.";
+            }
+        });
+    </script>
+</body>
+</html>
